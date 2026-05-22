@@ -1,0 +1,33 @@
+# Python Core & Byte-compiled files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual Environments 
+.venv/
+venv/
+ENV/
+env/
+
+
+# IDEs and Text Editors
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.idea/
+
+# Operating System Files
+.DS_Store
+Thumbs.db
+
+# Academic Drafts & LaTeX Temporary Files
+# Prevents accidental commits of report logs, auxiliary files, or PDFs
+*.aux
+*.log
+*.toc
+*.synctex.gz
+*.out
+*.blg
+*.bbl
