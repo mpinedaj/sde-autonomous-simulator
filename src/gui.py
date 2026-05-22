@@ -33,6 +33,7 @@ class SDESimulatorApp:
         ("c", "Difusión lineal  (c)", "0.5"),
         ("d", "Difusión constante  (d)", "0.0"),
     ]
+
     _SIM_PARAMS = [
         ("X0", "Condición inicial  (X₀)", "1.0"),
         ("T",  "Tiempo final  (T)", "1.0"),
@@ -58,27 +59,32 @@ class SDESimulatorApp:
         sb.pack_propagate(False)
 
         tk.Label(
-            sb, text="Parámetros",
+            sb,
+            text="Parámetros",
             font=("Segoe UI", 16, "bold"),
-            bg=SIDEBAR_BG, fg=SIDEBAR_FG,
+            bg=SIDEBAR_BG,
+            fg=SIDEBAR_FG,
         ).pack(pady=(20, 4), padx=20, anchor="w")
 
         tk.Label(
             sb,
             text="dXₜ = (aXₜ + b)dt + (cXₜ + d)dBₜ",
             font=("Consolas", 10),
-            bg=SIDEBAR_BG, fg=ACCENT_HOVER,
+            bg=SIDEBAR_BG,
+            fg=ACCENT_HOVER,
         ).pack(padx=20, anchor="w", pady=(0, 12))
 
         self._separator(sb)
 
         self._section_label(sb, "COEFICIENTES DE LA EDE")
+
         for key, label, default in self._COEFF_PARAMS:
             self._param_row(sb, key, label, default)
 
         self._separator(sb)
 
         self._section_label(sb, "PARÁMETROS DE SIMULACIÓN")
+
         for key, label, default in self._SIM_PARAMS:
             self._param_row(sb, key, label, default)
 
@@ -86,31 +92,60 @@ class SDESimulatorApp:
         btn_frame.pack(fill=tk.X, padx=20, pady=25)
 
         self.sim_btn = tk.Button(
-            btn_frame, text="SIMULAR",
+            btn_frame,
+            text="SIMULAR",
             font=("Segoe UI", 13, "bold"),
-            bg=ACCENT, fg="white",
-            activebackground=ACCENT_HOVER, activeforeground="white",
-            bd=0, pady=10, cursor="hand2",
+            bg=ACCENT,
+            fg="white",
+            activebackground=ACCENT_HOVER,
+            activeforeground="white",
+            bd=0,
+            pady=10,
+            cursor="hand2",
             command=self.run_simulation,
         )
         self.sim_btn.pack(fill=tk.X)
 
+        # NUEVO BOTÓN LIMPIAR
+        self.clear_btn = tk.Button(
+            btn_frame,
+            text="LIMPIAR",
+            font=("Segoe UI", 11, "bold"),
+            bg="#424242",
+            fg="white",
+            activebackground="#616161",
+            activeforeground="white",
+            bd=0,
+            pady=8,
+            cursor="hand2",
+            command=self.reset_app,
+        )
+        self.clear_btn.pack(fill=tk.X, pady=(10, 0))
+
         self.status_var = tk.StringVar(value="Listo para simular")
+
         tk.Label(
-            sb, textvariable=self.status_var,
-            font=("Segoe UI", 9), bg=SIDEBAR_BG, fg=SECTION_FG,
+            sb,
+            textvariable=self.status_var,
+            font=("Segoe UI", 9),
+            bg=SIDEBAR_BG,
+            fg=SECTION_FG,
         ).pack(side=tk.BOTTOM, padx=20, pady=10, anchor="w")
 
     def _separator(self, parent):
         tk.Frame(parent, height=1, bg=SEPARATOR).pack(
-            fill=tk.X, padx=15, pady=8
+            fill=tk.X,
+            padx=15,
+            pady=8,
         )
 
     def _section_label(self, parent, text):
         tk.Label(
-            parent, text=text,
+            parent,
+            text=text,
             font=("Segoe UI", 9, "bold"),
-            bg=SIDEBAR_BG, fg=SECTION_FG,
+            bg=SIDEBAR_BG,
+            fg=SECTION_FG,
         ).pack(padx=20, anchor="w", pady=(6, 4))
 
     def _param_row(self, parent, key, label, default):
@@ -118,73 +153,133 @@ class SDESimulatorApp:
         frame.pack(fill=tk.X, padx=20, pady=2)
 
         tk.Label(
-            frame, text=label,
-            font=("Segoe UI", 10), bg=SIDEBAR_BG, fg=SIDEBAR_FG, anchor="w",
+            frame,
+            text=label,
+            font=("Segoe UI", 10),
+            bg=SIDEBAR_BG,
+            fg=SIDEBAR_FG,
+            anchor="w",
         ).pack(anchor="w")
 
         entry = tk.Entry(
             frame,
             font=("Consolas", 11),
-            bg=ENTRY_BG, fg=ENTRY_FG,
+            bg=ENTRY_BG,
+            fg=ENTRY_FG,
             insertbackground=ENTRY_FG,
-            bd=0, relief="flat",
+            bd=0,
+            relief="flat",
             highlightthickness=1,
             highlightbackground=SEPARATOR,
             highlightcolor=ACCENT,
         )
+
         entry.pack(fill=tk.X, pady=(2, 0), ipady=4)
         entry.insert(0, default)
 
         entry.bind("<Return>", lambda _: self.run_simulation())
 
         self.entries[key] = entry
-        
+
     def _build_plot_area(self):
         plot_frame = tk.Frame(self.root, bg=MAIN_BG)
-        plot_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True, padx=8, pady=8)
+        plot_frame.pack(
+            side=tk.RIGHT,
+            fill=tk.BOTH,
+            expand=True,
+            padx=8,
+            pady=8,
+        )
 
         self.fig = Figure(figsize=(9, 6), facecolor="#fafafa", dpi=100)
+
         self.ax = self.fig.add_subplot(111)
+
         self._empty_plot()
 
+        # Canvas
         self.canvas = FigureCanvasTkAgg(self.fig, master=plot_frame)
-        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
-
         self.canvas.draw()
+
+        # NUEVA TOOLBAR DE NAVEGACIÓN
+        toolbar = NavigationToolbar2Tk(self.canvas, plot_frame)
+        toolbar.update()
+
+        # Widget del gráfico
+        self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
     def _empty_plot(self):
         ax = self.ax
+
         ax.set_facecolor("#fafafa")
+
         ax.set_title(
             "Simulación de EDE Autónoma",
-            fontsize=14, fontweight="bold", pad=15,
+            fontsize=14,
+            fontweight="bold",
+            pad=15,
         )
+
         ax.set_xlabel("Tiempo  t", fontsize=12)
         ax.set_ylabel("X(t)", fontsize=12)
+
         ax.grid(True, alpha=0.2, linestyle="--")
+
         ax.text(
-            0.5, 0.5, "Presione  SIMULAR  para comenzar",
-            transform=ax.transAxes, ha="center", va="center",
-            fontsize=14, color="#b0b0b0",
+            0.5,
+            0.5,
+            "Presione  SIMULAR  para comenzar",
+            transform=ax.transAxes,
+            ha="center",
+            va="center",
+            fontsize=14,
+            color="#b0b0b0",
         )
+
+    # NUEVO MÉTODO RESET
+    def reset_app(self):
+        """Restaura parámetros por defecto y limpia la gráfica."""
+
+        for key, _, default in self._COEFF_PARAMS:
+            self.entries[key].delete(0, tk.END)
+            self.entries[key].insert(0, default)
+
+        for key, _, default in self._SIM_PARAMS:
+            self.entries[key].delete(0, tk.END)
+            self.entries[key].insert(0, default)
+
+        self.ax.clear()
+
+        self._empty_plot()
+
+        self.canvas.draw()
+
+        self.status_var.set("Parámetros restaurados")
 
     def _read_params(self):
         """Lee y valida todos los campos. Retorna dict o None si hay error."""
+
         try:
             v = {}
+
             for key in ("a", "b", "c", "d", "X0", "T", "dt"):
                 raw = self.entries[key].get().strip()
                 v[key] = float(raw)
+
             v["M"] = int(self.entries["M"].get().strip())
 
             if v["T"] <= 0:
                 raise ValueError("El tiempo final T debe ser positivo.")
+
             if v["dt"] <= 0:
                 raise ValueError("El paso de tiempo Δt debe ser positivo.")
+
             if v["dt"] > v["T"]:
                 raise ValueError("Δt debe ser menor o igual que T.")
+
             if v["M"] <= 0:
                 raise ValueError("M debe ser un entero positivo.")
+
             return v
 
         except ValueError as exc:
@@ -193,6 +288,7 @@ class SDESimulatorApp:
 
     def run_simulation(self):
         vals = self._read_params()
+
         if vals is None:
             return
 
@@ -206,64 +302,101 @@ class SDESimulatorApp:
         M  = vals["M"]
 
         self.status_var.set("Simulando …")
+
         self.root.update_idletasks()
 
         try:
             t_grid, X_paths = simulate_euler(a, b, c, d, X0, T, dt, M)
-            m   = exact_mean(a, b, X0, t_grid)
+
+            m = exact_mean(a, b, X0, t_grid)
+
             var = exact_variance(a, b, c, d, X0, t_grid)
+
             std = np.sqrt(var)
+
         except Exception as exc:
             messagebox.showerror("Error de simulación", str(exc))
             self.status_var.set("Error")
             return
 
         ax = self.ax
+
         ax.clear()
+
         ax.set_facecolor("#fafafa")
 
         alpha_traj = max(0.08, 0.6 / np.sqrt(max(M, 1)))
 
         for i in range(M):
+
             label_traj = "Trayectorias (Euler)" if i == 0 else None
+
             ax.plot(
-                t_grid, X_paths[i],
-                color="#42A5F5", alpha=alpha_traj, linewidth=0.8,
-                label=label_traj, zorder=1,
+                t_grid,
+                X_paths[i],
+                color="#42A5F5",
+                alpha=alpha_traj,
+                linewidth=0.8,
+                label=label_traj,
+                zorder=1,
             )
 
         ax.fill_between(
-            t_grid, m - std, m + std,
-            color="#66BB6A", alpha=0.15, zorder=2,
-        )
-        ax.plot(
-            t_grid, m + std,
-            color="#43A047", linewidth=2, linestyle="--",
-            label="E[Xₜ] ± σ(Xₜ)", zorder=3,
-        )
-        ax.plot(
-            t_grid, m - std,
-            color="#43A047", linewidth=2, linestyle="--", zorder=3,
+            t_grid,
+            m - std,
+            m + std,
+            color="#66BB6A",
+            alpha=0.15,
+            zorder=2,
         )
 
         ax.plot(
-            t_grid, m,
-            color="#EF5350", linewidth=2.5,
-            label="Media exacta  E[Xₜ]", zorder=4,
+            t_grid,
+            m + std,
+            color="#43A047",
+            linewidth=2,
+            linestyle="--",
+            label="E[Xₜ] ± σ(Xₜ)",
+            zorder=3,
+        )
+
+        ax.plot(
+            t_grid,
+            m - std,
+            color="#43A047",
+            linewidth=2,
+            linestyle="--",
+            zorder=3,
+        )
+
+        ax.plot(
+            t_grid,
+            m,
+            color="#EF5350",
+            linewidth=2.5,
+            label="Media exacta  E[Xₜ]",
+            zorder=4,
         )
 
         n_steps = len(t_grid) - 1
+
         title = (
             f"dX = ({a}·X + {b})dt + ({c}·X + {d})dBₜ"
             f"   │   M = {M},  Δt = {dt},  n = {n_steps}"
         )
+
         ax.set_title(title, fontsize=11, fontweight="bold", pad=12)
+
         ax.set_xlabel("Tiempo  t", fontsize=12)
+
         ax.set_ylabel("X(t)", fontsize=12)
+
         ax.legend(loc="best", fontsize=10, framealpha=0.9)
+
         ax.grid(True, alpha=0.2, linestyle="--")
 
         self.fig.tight_layout()
+
         self.canvas.draw()
 
         self.status_var.set(
@@ -274,7 +407,6 @@ def main():
     root = tk.Tk()
     SDESimulatorApp(root)
     root.mainloop()
-
 
 if __name__ == "__main__":
     main()
