@@ -1,10 +1,3 @@
-"""
-Punto de entrada del Simulador de EDE Autónoma.
-
-Uso:
-    python main.py
-"""
-
 import sys
 import os
 
