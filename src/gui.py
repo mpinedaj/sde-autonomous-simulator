@@ -12,7 +12,7 @@ matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
-from simulator import simulate_euler, exact_mean, exact_variance
+from simulator import simulate_path, determine_mean, determine_variance
 
 SIDEBAR_BG   = "#1b1b2f"
 SIDEBAR_FG   = "#e2e2e2"
@@ -302,16 +302,24 @@ class SDESimulatorApp:
         M  = vals["M"]
 
         self.status_var.set("Simulando …")
-
         self.root.update_idletasks()
 
         try:
-            t_grid, X_paths = simulate_euler(a, b, c, d, X0, T, dt, M)
+            # 1. Construimos la partición del tiempo (t_grid)
+            # Debe ir desde 0.0 hasta T con pasos de dt
+            n_pasos = int(T / dt)
+            t_grid = np.linspace(0.0, T, n_pasos + 1)
+            
+            # 2. Generamos las M trayectorias llamando a simulate_path individualmente
+            X_paths = []
+            for _ in range(M):
+                # simulate_path ya no recibe M; calcula una única trayectoria por llamada
+                path = simulate_path(0.0, T, dt, X0, a, b, c, d)
+                X_paths.append(path)
 
-            m = exact_mean(a, b, X0, t_grid)
-
-            var = exact_variance(a, b, c, d, X0, t_grid)
-
+            # 3. Evaluamos las funciones teóricas exactas usando el vector de tiempos completo [cite: 9]
+            m = determine_mean(t_grid, X0, a, b)
+            var = determine_variance(t_grid, m, X0, a, b, c, d)
             std = np.sqrt(var)
 
         except Exception as exc:
@@ -319,28 +327,28 @@ class SDESimulatorApp:
             self.status_var.set("Error")
             return
 
+        # --- A PARTIR DE AQUÍ COMIENZA EL RENDERIZADO VISUAL EN LA INTERFAZ ---
         ax = self.ax
-
         ax.clear()
-
         ax.set_facecolor("#fafafa")
 
-        alpha_traj = max(0.08, 0.6 / np.sqrt(max(M, 1)))
+        # Ajuste dinámico de opacidad para que no sature la gráfica si M es muy grande
+        alpha_traj = max(0.1, 0.95 / np.sqrt(max(M, 1)))
 
+        # Graficamos las M trayectorias almacenadas [cite: 8, 9]
         for i in range(M):
-
             label_traj = "Trayectorias (Euler)" if i == 0 else None
-
             ax.plot(
                 t_grid,
                 X_paths[i],
-                color="#42A5F5",
+                color="#1094FF",
                 alpha=alpha_traj,
                 linewidth=0.8,
                 label=label_traj,
                 zorder=1,
             )
 
+        # Relleno del sombreado de la desviación estándar (Bandas de dispersión)
         ax.fill_between(
             t_grid,
             m - std,
@@ -350,6 +358,7 @@ class SDESimulatorApp:
             zorder=2,
         )
 
+        # Líneas discontinuas para los límites superiores e inferiores de la varianza [cite: 9]
         ax.plot(
             t_grid,
             m + std,
@@ -358,7 +367,7 @@ class SDESimulatorApp:
             linestyle="--",
             label="E[Xₜ] ± σ(Xₜ)",
             zorder=3,
-        )
+            )
 
         ax.plot(
             t_grid,
@@ -369,6 +378,7 @@ class SDESimulatorApp:
             zorder=3,
         )
 
+        # Línea central sólida para la media exacta teórica [cite: 9]
         ax.plot(
             t_grid,
             m,
@@ -382,25 +392,20 @@ class SDESimulatorApp:
 
         title = (
             f"dX = ({a}·X + {b})dt + ({c}·X + {d})dBₜ"
-            f"   │   M = {M},  Δt = {dt},  n = {n_steps}"
+            f"   │   M = {M},   Δt = {dt},   n = {n_steps}"
         )
 
         ax.set_title(title, fontsize=11, fontweight="bold", pad=12)
-
         ax.set_xlabel("Tiempo  t", fontsize=12)
-
         ax.set_ylabel("X(t)", fontsize=12)
-
         ax.legend(loc="best", fontsize=10, framealpha=0.9)
-
         ax.grid(True, alpha=0.2, linestyle="--")
 
         self.fig.tight_layout()
-
         self.canvas.draw()
 
         self.status_var.set(
-            f"✓  {M} trayectorias  ·  {n_steps} pasos  ·  Δt = {dt}"
+            f"✓   {M} trayectorias  ·  {n_steps} pasos  ·  Δt = {dt}"
         )
 
 def main():
