@@ -100,7 +100,7 @@ class SDESimulatorApp:
             activebackground=ACCENT_HOVER,
             activeforeground="white",
             bd=0,
-            pady=10,
+            pady=1,
             cursor="hand2",
             command=self.run_simulation,
         )
@@ -116,7 +116,7 @@ class SDESimulatorApp:
             activebackground="#616161",
             activeforeground="white",
             bd=0,
-            pady=8,
+        
             cursor="hand2",
             command=self.reset_app,
         )
