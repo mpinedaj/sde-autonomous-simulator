@@ -341,49 +341,19 @@ class SDESimulatorApp:
             ax.plot(
                 t_grid,
                 X_paths[i],
-                color="#1094FF",
+                color="#006EFF",
                 alpha=alpha_traj,
-                linewidth=0.8,
+                linewidth=1.6,
                 label=label_traj,
                 zorder=1,
             )
-
-        # Relleno del sombreado de la desviación estándar (Bandas de dispersión)
-        ax.fill_between(
-            t_grid,
-            m - std,
-            m + std,
-            color="#66BB6A",
-            alpha=0.15,
-            zorder=2,
-        )
-
-        # Líneas discontinuas para los límites superiores e inferiores de la varianza [cite: 9]
-        ax.plot(
-            t_grid,
-            m + std,
-            color="#43A047",
-            linewidth=2,
-            linestyle="--",
-            label="E[Xₜ] ± σ(Xₜ)",
-            zorder=3,
-            )
-
-        ax.plot(
-            t_grid,
-            m - std,
-            color="#43A047",
-            linewidth=2,
-            linestyle="--",
-            zorder=3,
-        )
 
         # Línea central sólida para la media exacta teórica [cite: 9]
         ax.plot(
             t_grid,
             m,
             color="#EF5350",
-            linewidth=2.5,
+            linewidth=3,
             label="Media exacta  E[Xₜ]",
             zorder=4,
         )
