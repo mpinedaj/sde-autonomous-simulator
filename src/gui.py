@@ -12,7 +12,7 @@ matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 
-from simulator import simulate_path, determine_mean, determine_variance
+from simulator import simulate_path, determine_mean
 
 SIDEBAR_BG   = "#1b1b2f"
 SIDEBAR_FG   = "#e2e2e2"
@@ -319,8 +319,7 @@ class SDESimulatorApp:
 
             # 3. Evaluamos las funciones teóricas exactas usando el vector de tiempos completo [cite: 9]
             m = determine_mean(t_grid, X0, a, b)
-            var = determine_variance(t_grid, m, X0, a, b, c, d)
-            std = np.sqrt(var)
+        
 
         except Exception as exc:
             messagebox.showerror("Error de simulación", str(exc))
